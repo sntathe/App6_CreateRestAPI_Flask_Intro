@@ -1,11 +1,13 @@
 from flask import Flask, render_template
+import pandas as pd
 
 app = Flask(__name__)
 
-
+stations = pd.read_csv("data_small/stations.txt" , skiprows=17)
+stations = stations[["STAID" , "STANAME                                 "]]
 @app.route("/")
 def home():
-    return render_template("Home.html")
+    return render_template("Home.html" , data = stations.to_html())
 
 
 @app.route("/about/")
@@ -14,11 +16,16 @@ def about():
 
 
 @app.route("/api/v1/<station>/<date>")
-def temp(station , date):
-    temp = 23
-    return {"station" : station ,
-            "date" : date ,
-            "temperature" : 23}
+def temp(station, date):
+    filename = "data_small/TG_STAID" + str(station).zfill(6) + ".txt"
+    df = pd.read_csv(filename, skiprows=20, parse_dates=["    DATE"])
+    temprature = df.loc[df["    DATE"] == date]["   TG"].squeeze() / 10
+
+    print(df)
+    return {"station": station,
+            "date": date,
+            "temperature": temprature}
+
 
 if __name__ == "__main__":
     app.run(debug=True)
